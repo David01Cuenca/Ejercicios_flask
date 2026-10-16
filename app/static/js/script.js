@@ -1,3 +1,5 @@
+//Ejercicio 1
+
 async function pedir() {
     const name_data = document.getElementById("name").value;   
     const response = await fetch("/saludo", {
