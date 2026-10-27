@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Calculadora</title></head>
+<body>
+  <h1>Calculadora</h1>
+
+  <input id="a" placeholder="a">
+  <select id="op">
+    <option value="sumar">+</option>
+    <option value="restar">−</option>
+    <option value="multiplicar">×</option>
+    <option value="dividir">÷</option>
+    <option value="potencia">^</option>
+  </select>
+  <input id="b" placeholder="b">
+  <button onclick="calcular()">Calcular</button>
+
+  <div id="respuesta"></div>
+  <ul id="historial"></ul>
+
+  <script>
+    async function calcular() {
+      const a = document.getElementById("a").value.trim();
+      const b = document.getElementById("b").value.trim();
+      const op = document.getElementById("op").value;
+      const div = document.getElementById("respuesta");
+
+      const p = new URLSearchParams({a, b, op});
+      const r = await fetch("/calcular?" + p);
+      const datos = await r.json();
+
+      if (r.ok) {
+        div.textContent = "Resultado: " + datos.resultado;
+        const ul = document.getElementById("historial");
+        ul.innerHTML = "";
+        for (const linea of datos.historial) {
+          const li = document.createElement("li");
+          li.textContent = linea;
+          ul.appendChild(li);
+        }
+      } else {
+        div.textContent = "Error: " + datos.error;
+      }
+    }
+  </script>
+</body>
+</html>

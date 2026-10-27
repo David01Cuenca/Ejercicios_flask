@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+  <h1>Inscripción</h1>
+
+  <form id="form" novalidate>
+    Nombre <input name="nombre" required><br>
+    Correo <input name="correo" type="email" required><br>
+    Edad <input name="edad" type="number" min="16" max="99" required><br>
+    Curso
+    <select name="curso">
+      <option value="1">1º</option>
+      <option value="2">2º</option>
+      <option value="3">3º</option>
+      <option value="4">4º</option>
+    </select><br>
+    <input name="normas" type="checkbox" required> Acepto las normas del taller<br>
+    <button>Inscribirme</button>
+  </form>
+
+  <div id="respuesta"></div>
+
+  <h2>Inscritos</h2>
+  <ul id="lista"></ul>
+
+  <script>
+    const form = document.getElementById("form");
+    const respuesta = document.getElementById("respuesta");
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const r = await fetch("/registro", { method: "POST", body: new FormData(form) });
+      const datos = await r.json();
+      if (r.ok) {
+        respuesta.textContent = datos.mensaje;
+        form.reset();
+        cargar();
+      } else {
+        respuesta.textContent = datos.errores.join(" · ");
+      }
+    });
+
+    async function cargar() {
+      const r = await fetch("/inscritos");
+      const datos = await r.json();
+      const lista = document.getElementById("lista");
+      lista.innerHTML = "";
+      for (const i of datos.inscritos) {
+        const li = document.createElement("li");
+        li.textContent = i.nombre + " (" + i.curso + "º)";
+        lista.appendChild(li);
+      }
+    }
+
+    cargar();
+  </script>
+</body>
+</html>

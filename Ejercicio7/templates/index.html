@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+  <h1>Encuesta</h1>
+
+  <form id="form">
+    <fieldset>
+      <input type="radio" name="lenguaje" value="Python"> Python
+      <input type="radio" name="lenguaje" value="JavaScript"> JavaScript
+      <input type="radio" name="lenguaje" value="Java"> Java
+      <input type="radio" name="lenguaje" value="C"> C
+    </fieldset>
+    <fieldset>
+      <input type="checkbox" name="uso" value="Web"> Web
+      <input type="checkbox" name="uso" value="Datos"> Datos
+      <input type="checkbox" name="uso" value="IA"> IA
+      <input type="checkbox" name="uso" value="Juegos"> Juegos
+    </fieldset>
+    <textarea name="comentario" maxlength="280"></textarea>
+    <button id="boton">Votar</button>
+  </form>
+
+  <div id="mensaje"></div>
+
+  <h2>Resultados</h2>
+  <table border="1">
+    <thead><tr><th>Lenguaje</th><th>Votos</th><th>Porcentaje</th></tr></thead>
+    <tbody id="filas"></tbody>
+  </table>
+  <p id="usos"></p>
+  <ul id="comentarios"></ul>
+
+  <script>
+    const form = document.getElementById("form");
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const r = await fetch("/votar", { method: "POST", body: new FormData(form) });
+      const datos = await r.json();
+      document.getElementById("mensaje").textContent = datos.mensaje || datos.error;
+      if (r.ok) {
+        document.getElementById("boton").disabled = true;
+        form.reset();
+        cargar();
+      }
+    });
+
+    async function cargar() {
+      const r = await fetch("/resultados");
+      const d = await r.json();
+
+      const filas = document.getElementById("filas");
+      filas.innerHTML = "";
+      for (const [lenguaje, n] of Object.entries(d.votos)) {
+        const pct = d.total ? Math.round(n * 100 / d.total) : 0;
+        const fila = document.createElement("tr");
+        fila.innerHTML = "<td>" + lenguaje + "</td><td>" + n + "</td><td>" +
+          "<progress value='" + n + "' max='" + (d.total || 1) + "'></progress> " + pct + " %</td>";
+        filas.appendChild(fila);
+      }
+
+      document.getElementById("usos").textContent = "Usos — " +
+        Object.entries(d.usos).map(([u, n]) => u + ": " + n).join(" · ");
+
+      const ul = document.getElementById("comentarios");
+      ul.innerHTML = "";
+      for (const c of d.comentarios) {
+        const li = document.createElement("li");
+        li.textContent = c;   // los comentarios son de usuarios: textContent
+        ul.appendChild(li);
+      }
+    }
+
+    cargar();
+  </script>
+</body>
+</html>
