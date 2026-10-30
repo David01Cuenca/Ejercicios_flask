@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Ejercicio 3</title></head>
+<body>
+  <h1>Lista de tareas</h1>
+  <input id="texto" placeholder="Nueva tarea">
+  <button onclick="anadir()">Añadir</button>
+  <div id="error" style="color: red"></div>
+  <div id="respuesta"></div>
+
+  <script>
+    function pintar(tareas) {
+      const div = document.getElementById("respuesta");
+      if (tareas.length === 0) {
+        div.innerHTML = "<p>No hay tareas</p>";
+        return;
+      }
+      let html = "<p>Tareas: " + tareas.length + "</p><ul>";
+      tareas.forEach(function (t, i) {
+        html += "<li>" + t + " <button onclick='borrar(" + i + ")'>Borrar</button></li>";
+      });
+      div.innerHTML = html + "</ul>";
+    }
+
+    async function cargar() {
+      const r = await fetch("/tareas");
+      const datos = await r.json();
+      pintar(datos.tareas);
+    }
+
+    async function anadir() {
+      const input = document.getElementById("texto");
+      const texto = input.value.trim();
+
+      const r = await fetch("/tareas", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({texto: texto})
+      });
+
+      const datos = await r.json();
+
+      if (r.ok) {
+        document.getElementById("error").textContent = "";
+        input.value = "";
+        pintar(datos.tareas);
+      } else {
+        document.getElementById("error").textContent = datos.error;
+      }
+    }
+
+    async function borrar(i) {
+      const r = await fetch("/tareas/" + i, { method: "DELETE" });
+      const datos = await r.json();
+
+      if (r.ok) {
+        document.getElementById("error").textContent = "";
+        pintar(datos.tareas);
+      } else {
+        document.getElementById("error").textContent = datos.error;
+      }
+    }
+
+    cargar();   // al abrir la página, mostrar automáticamente las tareas que ya existan
+  </script>
+</body>
+</html>

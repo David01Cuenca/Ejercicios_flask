@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Ejercicio 6</title>
+</head>
+<body>
+  <h1>Notas de la asignatura</h1>
+
+  <label for="curso">Curso</label>
+  <select id="curso" onchange="cargar()">
+    <option value="todos">Todos</option>
+    <option value="1">1º</option>
+    <option value="2">2º</option>
+  </select>
+
+  <label for="orden">Ordenar por</label>
+  <select id="orden" onchange="cargar()">
+    <option value="nombre">Nombre</option>
+    <option value="nota">Nota</option>
+  </select>
+
+  <table border="1">
+    <thead>
+      <tr><th>Nombre</th><th>Curso</th><th>Nota</th><th>Estado</th></tr>
+    </thead>
+    <tbody id="filas"></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="2">Media</td>
+        <td id="media"></td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <script>
+    async function cargar() {
+      const params = new URLSearchParams({
+        curso: document.getElementById("curso").value,
+        orden: document.getElementById("orden").value
+      });
+      const r = await fetch("/alumnos?" + params);
+      const datos = await r.json();
+
+      const tbody = document.getElementById("filas");
+      tbody.innerHTML = "";
+      datos.alumnos.forEach(function (a) {
+        const fila = document.createElement("tr");
+        const estado = a.nota >= 5 ? "Aprobado" : "Suspenso";
+        [a.nombre, a.curso + "º", a.nota, estado].forEach(function (valor) {
+          const celda = document.createElement("td");
+          celda.textContent = valor;
+          fila.appendChild(celda);
+        });
+        tbody.appendChild(fila);
+      });
+      document.getElementById("media").textContent = datos.media ?? "-";
+    }
+
+    cargar();
+  </script>
+</body>
+</html>

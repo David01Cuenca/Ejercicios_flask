@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Ejercicio 8</title>
+</head>
+<body>
+  <h1>Tablón de mensajes</h1>
+
+  <form id="formulario">
+    <p>
+      <label for="autor">Autor</label>
+      <input id="autor" name="autor" maxlength="30" required>
+    </p>
+    <p>
+      <label for="texto">Mensaje</label><br>
+      <textarea id="texto" name="texto" maxlength="280" rows="3" cols="40"
+                placeholder="Escribiendo..." required></textarea>
+    </p>
+    <p id="contador">280 caracteres restantes</p>
+    <button type="submit">Publicar</button>
+  </form>
+
+  <div id="error" style="color: red"></div>
+  <ul id="lista"></ul>
+
+  <script>
+    const form = document.getElementById("formulario");
+    const textarea = document.getElementById("texto");
+    const contador = document.getElementById("contador");
+    const error = document.getElementById("error");
+
+    
+    function pintar(mensajes) {
+      const lista = document.getElementById("lista");
+      lista.innerHTML = "";   
+
+      mensajes.forEach(function (m) {
+        const li = document.createElement("li");
+
+        const autor = document.createElement("strong");
+        autor.textContent = m.autor;
+
+        const resto = document.createTextNode(" (" + m.hora + "): " + m.texto);
+
+        li.appendChild(autor);
+        li.appendChild(resto);
+        lista.appendChild(li);
+      });
+    }
+
+   
+    function actualizarContador() {
+      const restantes = 280 - textarea.value.length;
+      contador.textContent = restantes + " caracteres restantes";
+    }
+
+  
+    async function cargar() {
+      const r = await fetch("/mensajes");
+      const datos = await r.json();
+      pintar(datos.mensajes);
+    }
+
+    textarea.addEventListener("input", actualizarContador);
+
+   
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const r = await fetch("/mensajes", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          autor: document.getElementById("autor").value,
+          texto: textarea.value
+        })
+      });
+      const datos = await r.json();
+
+      if (!r.ok) {
+        error.textContent = datos.error;
+        return;
+      }
+      error.textContent = "";
+      textarea.value = "";
+      actualizarContador();
+      pintar(datos.mensajes);
+    });
+
+    cargar();
+    setInterval(cargar, 5000);   
+  </script>
+</body>
+</html>
